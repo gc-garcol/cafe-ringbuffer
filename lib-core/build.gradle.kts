@@ -25,3 +25,8 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter-api:${jupiterVersion}")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${jupiterVersion}")
 }
+
+tasks.test {
+    jvmArgs("--add-opens", "java.base/java.nio=ALL-UNNAMED")
+    useJUnitPlatform()
+}
