@@ -7,5 +7,15 @@ package gc.garcol.libcore;
 @FunctionalInterface
 public interface MessageHandler
 {
-    void onMessage(int msgTypeId, UnsafeBuffer buffer, int index, int length);
+
+    /**
+     * Called for the processing of each message read from a buffer in turn.
+     *
+     * @param msgTypeId
+     * @param buffer
+     * @param index
+     * @param length
+     * @return should commit the consumed position or not
+     */
+    boolean onMessage(int msgTypeId, UnsafeBuffer buffer, int index, int length);
 }

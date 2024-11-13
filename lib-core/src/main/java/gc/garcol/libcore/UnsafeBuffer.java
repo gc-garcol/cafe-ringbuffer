@@ -21,26 +21,26 @@ public class UnsafeBuffer
 
     public void putInt(final int index, final int value)
     {
-        BufferUtil.UNSAFE.putInt(buffer, ARRAY_BASE_OFFSET + index, value);
+        UnsafeHelper.UNSAFE.putInt(buffer, ARRAY_BASE_OFFSET + index, value);
     }
 
     public int getInt(final int index)
     {
-        return BufferUtil.UNSAFE.getInt(buffer, ARRAY_BASE_OFFSET + index);
+        return UnsafeHelper.UNSAFE.getInt(buffer, ARRAY_BASE_OFFSET + index);
     }
 
     public void putBytes(final int index, final ByteBuffer srcBuffer, final int srcIndex, final int length)
     {
         final byte[] srcByteArray = BufferUtil.array(srcBuffer);
         final long srcBaseOffset = ARRAY_BASE_OFFSET + BufferUtil.arrayOffset(srcBuffer);
-        BufferUtil.UNSAFE.copyMemory(srcByteArray, srcBaseOffset + srcIndex, buffer, ARRAY_BASE_OFFSET + index, length);
+        UnsafeHelper.UNSAFE.copyMemory(srcByteArray, srcBaseOffset + srcIndex, buffer, ARRAY_BASE_OFFSET + index, length);
     }
 
     public void getBytes(final int index, final ByteBuffer dstBuffer, final int dstOffset, final int length)
     {
         final byte[] dstByteArray = BufferUtil.array(dstBuffer);
         final long dstBaseOffset = ARRAY_BASE_OFFSET + BufferUtil.arrayOffset(dstBuffer);
-        BufferUtil.UNSAFE.copyMemory(buffer, ARRAY_BASE_OFFSET + index, dstByteArray, dstBaseOffset + dstOffset, length);
+        UnsafeHelper.UNSAFE.copyMemory(buffer, ARRAY_BASE_OFFSET + index, dstByteArray, dstBaseOffset + dstOffset, length);
     }
 
 }

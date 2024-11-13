@@ -1,7 +1,7 @@
 package gc.garcol.libcore;
 
-import sun.misc.Unsafe;
-
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.VarHandle;
 import java.nio.ByteBuffer;
 
 /**
@@ -10,25 +10,27 @@ import java.nio.ByteBuffer;
  */
 public class BufferUtil
 {
-    public static final Unsafe UNSAFE = Unsafe.getUnsafe();
 
-    public static final long ARRAY_BASE_OFFSET = UNSAFE.arrayBaseOffset(byte[].class);
-    public static final long BYTE_BUFFER_HB_FIELD_OFFSET;
-    public static final long BYTE_BUFFER_OFFSET_FIELD_OFFSET;
+    public static final long ARRAY_BASE_OFFSET = UnsafeHelper.UNSAFE.arrayBaseOffset(byte[].class);
+    public static final VarHandle BYTE_BUFFER_HB_HANDLE;
+    public static final VarHandle BYTE_BUFFER_OFFSET_HANDLE;
 
     static
     {
         try
         {
-            BYTE_BUFFER_HB_FIELD_OFFSET = UNSAFE.objectFieldOffset(
-                ByteBuffer.class.getDeclaredField("hb"));
+            // VarHandle for the "hb" field in ByteBuffer
+            BYTE_BUFFER_HB_HANDLE = MethodHandles.privateLookupIn(ByteBuffer.class, MethodHandles.lookup())
+                .findVarHandle(ByteBuffer.class, "hb", byte[].class);
 
-            BYTE_BUFFER_OFFSET_FIELD_OFFSET = UNSAFE.objectFieldOffset(
-                ByteBuffer.class.getDeclaredField("offset"));
+            // VarHandle for the "offset" field in ByteBuffer
+            BYTE_BUFFER_OFFSET_HANDLE = MethodHandles.privateLookupIn(ByteBuffer.class, MethodHandles.lookup())
+                .findVarHandle(ByteBuffer.class, "offset", int.class);
+
         }
-        catch (final Exception ex)
+        catch (ReflectiveOperationException e)
         {
-            throw new RuntimeException(ex);
+            throw new RuntimeException("Failed to initialize VarHandles", e);
         }
     }
 
@@ -39,11 +41,11 @@ public class BufferUtil
             throw new IllegalArgumentException("buffer must wrap an array");
         }
 
-        return (byte[])UNSAFE.getObject(buffer, BYTE_BUFFER_HB_FIELD_OFFSET);
+        return (byte[])BYTE_BUFFER_HB_HANDLE.get(buffer);
     }
 
     public static int arrayOffset(final ByteBuffer buffer)
     {
-        return UNSAFE.getInt(buffer, BYTE_BUFFER_OFFSET_FIELD_OFFSET);
+        return (int)BYTE_BUFFER_OFFSET_HANDLE.get(buffer);
     }
 }

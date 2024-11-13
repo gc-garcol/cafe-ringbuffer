@@ -207,7 +207,13 @@ public class OneToManyRingBuffer
         // when [2] happened, the [2] ensures that the these instructions are synchronized into main memory as well
         int messageLength = unsafeBuffer.getInt(currentConsumerOffset);
         int messageTypeId = unsafeBuffer.getInt(currentConsumerOffset + Integer.BYTES);
-        handler.onMessage(messageTypeId, unsafeBuffer, currentConsumerOffset + HEADER_LENGTH, messageLength);
+
+        boolean consumeSuccess = handler.onMessage(messageTypeId, unsafeBuffer, currentConsumerOffset + HEADER_LENGTH, messageLength);
+
+        if (!consumeSuccess)
+        {
+            return false;
+        }
 
         int nextConsumerOffset = (currentConsumerOffset + HEADER_LENGTH + messageLength) % capacity;
 
