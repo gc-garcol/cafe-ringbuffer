@@ -172,22 +172,16 @@ public class OneToManyRingBuffer
     public boolean readOne(int consumerIndex, final MessageHandler handler)
     {
         // [1] happen-before guarantee for reads
-        long producerPos = producerPosition.get();
-        long preConsumerPos = consumerPositions.get(consumerIndex - 1);
+        long barrierPosition = consumerIndex == 0 ? producerPosition.get() : consumerPositions.get(consumerIndex - 1);
 
-        int producerOffset = offset(producerPos);
-        boolean producerFlip = flip(producerPos);
-        int preConsumerOffset = offset(preConsumerPos);
-        boolean preConsumerFlip = flip(preConsumerPos);
-
-        int previousBarrier = consumerIndex == 0 ? producerOffset : preConsumerOffset;
-        boolean previousFlip = consumerIndex == 0 ? producerFlip : preConsumerFlip;
+        int previousBarrier = offset(barrierPosition);
+        boolean previousFlip = flip(barrierPosition);
 
         long currentConsumerPosition = consumerPositions.get(consumerIndex);
         int currentConsumerOffset = offset(currentConsumerPosition);
-        boolean currentFlip = flip(currentConsumerPosition);
+        boolean currentConsumerFlip = flip(currentConsumerPosition);
 
-        if (sameCircle(currentFlip, previousFlip))
+        if (sameCircle(currentConsumerFlip, previousFlip))
         {
 
             if (currentConsumerOffset >= previousBarrier)
@@ -215,7 +209,7 @@ public class OneToManyRingBuffer
             return false;
         }
 
-        int nextConsumerOffset = (currentConsumerOffset + HEADER_LENGTH + messageLength) % capacity;
+        int nextConsumerOffset = (currentConsumerOffset + HEADER_LENGTH + messageLength + 1) % capacity;
 
         boolean shouldFlip = nextConsumerOffset < currentConsumerOffset;
         long newConsumerPosition = position(nextConsumerOffset, shouldFlip);
