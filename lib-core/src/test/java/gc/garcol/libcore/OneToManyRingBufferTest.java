@@ -130,7 +130,7 @@ public class OneToManyRingBufferTest
     }
 
     @Test
-    public void shouldConsumeThreadSafe_1P3C_10()
+    public void shouldConsumeThreadSafe_1P2C_10()
     {
         List<String> messages = IntStream.range(0, 10).boxed().map(i -> "Hello, world! " + i).toList();
 
