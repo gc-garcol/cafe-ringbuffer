@@ -65,7 +65,7 @@ public class OneToManyRingBufferTest
             messageBufferReader.get(messageBytes);
 
             System.out.println("message: " + new String(messageBytes));
-            Assertions.assertEquals(message, new String(messageBytes));
+            Assertions.assertEquals(message, new String(messageBytes), "Message not match");
 
             return true;
         };
@@ -115,7 +115,7 @@ public class OneToManyRingBufferTest
 
                 System.out.println("message: " + new String(messageBytes));
 
-                Assertions.assertEquals(messages.get(msgTypeId), new String(messageBytes));
+                Assertions.assertEquals(messages.get(msgTypeId), new String(messageBytes), "Message not match");
 
                 consumedIndexes.get(consumerId).incrementAndGet();
                 return true;
@@ -125,9 +125,9 @@ public class OneToManyRingBufferTest
         oneToManyRingBuffer.read(1, handlerSupplier.apply(1), 2);
         oneToManyRingBuffer.read(2, handlerSupplier.apply(2), 1);
 
-        Assertions.assertEquals(3, consumedIndexes.get(0).get());
-        Assertions.assertEquals(2, consumedIndexes.get(1).get());
-        Assertions.assertEquals(1, consumedIndexes.get(2).get());
+        Assertions.assertEquals(3, consumedIndexes.get(0).get(), "Consumer 0 not consume 3 messages");
+        Assertions.assertEquals(2, consumedIndexes.get(1).get(), "Consumer 1 not consume 2 messages");
+        Assertions.assertEquals(1, consumedIndexes.get(2).get(), "Consumer 2 not consume 1 message");
     }
 
     @Test
@@ -166,7 +166,7 @@ public class OneToManyRingBufferTest
 
                 System.out.println("message: " + new String(messageBytes));
 
-                Assertions.assertEquals(messages.get(msgTypeId), new String(messageBytes));
+                Assertions.assertEquals(messages.get(msgTypeId), new String(messageBytes), "Message not match");
 
                 consumedIndexes.get(consumerId).incrementAndGet();
                 return true;
@@ -195,13 +195,91 @@ public class OneToManyRingBufferTest
         UncheckUtil.run(thread0::join);
         UncheckUtil.run(thread1::join);
 
-        Assertions.assertEquals(messages.size(), consumedIndexes.get(0).get());
-        Assertions.assertEquals(messages.size(), consumedIndexes.get(1).get());
+        Assertions.assertEquals(messages.size(), consumedIndexes.get(0).get(), "Consumer 0 not consume all messages");
+        Assertions.assertEquals(messages.size(), consumedIndexes.get(1).get(), "Consumer 1 not consume all messages");
     }
 
     @Test
     public void shouldPublishWithLimit_1P1C_10()
     {
+        List<String> messages = IntStream.range(0, 50).boxed().map(i -> "Hello, world! " + i).toList();
+        oneToManyRingBuffer = new OneToManyRingBuffer(10, 1);
+        for (int i = 0; i < messages.size(); i++)
+        {
+            messageBufferWriter.clear();
+            ByteBufferUtil.put(messageBufferWriter, 0, messages.get(i).getBytes());
+            messageBufferWriter.flip();
+            boolean success = oneToManyRingBuffer.write(i, messageBufferWriter);
+            System.out.println("write message " + i + " with length " + messageBufferWriter.limit() + " and align-length " + BitUtil.align(messageBufferWriter.limit() + OneToManyRingBuffer.HEADER_LENGTH, OneToManyRingBuffer.HEADER_LENGTH));
+            if (!success)
+            {
+                System.out.println("Failed to write message: " + i);
+                break;
+            }
+        }
+    }
 
+    @Test
+    public void shouldPublishInNextCircle_1P1C_10()
+    {
+        List<String> messages = IntStream.range(0, 50).boxed().map(i -> "Hello, world! " + i).toList();
+        oneToManyRingBuffer = new OneToManyRingBuffer(10, 1);
+
+        AtomicInteger publishedMessages = new AtomicInteger(0);
+
+        Runnable publishMessages = () -> {
+            for (int i = 0; i < messages.size(); i++)
+            {
+                messageBufferWriter.clear();
+                ByteBufferUtil.put(messageBufferWriter, 0, messages.get(i).getBytes());
+                messageBufferWriter.flip();
+                boolean success = oneToManyRingBuffer.write(i, messageBufferWriter);
+                System.out.println("write message " + i + " with length " + messageBufferWriter.limit() + " and align-length " + BitUtil.align(messageBufferWriter.limit() + OneToManyRingBuffer.HEADER_LENGTH, OneToManyRingBuffer.HEADER_LENGTH));
+                if (!success)
+                {
+                    System.out.println("Failed to write message: " + i);
+                    break;
+                }
+                publishedMessages.incrementAndGet();
+            }
+        };
+
+        publishMessages.run();
+
+        MessageHandler handler = (msgTypeId, buffer, index, length) -> {
+            System.out.println("--------------------");
+            System.out.println("msgTypeId: " + msgTypeId);
+            System.out.println("index: " + index);
+            System.out.println("length: " + length);
+
+            messageBufferReader.clear();
+
+            buffer.getBytes(index, messageBufferReader, 0, length);
+            messageBufferReader.position(length);
+            messageBufferReader.flip();
+
+            byte[] messageBytes = new byte[length];
+            messageBufferReader.get(messageBytes);
+
+            System.out.println("message: " + new String(messageBytes));
+            return true;
+        };
+
+        oneToManyRingBuffer.read(0, handler, 1);
+        publishedMessages.decrementAndGet();
+
+        messageBufferWriter.clear();
+        ByteBufferUtil.put(messageBufferWriter, 0, "Hello, world! 1".getBytes());
+        messageBufferWriter.flip();
+        System.out.println("--------");
+        System.out.println("write message 100 with length " + messageBufferWriter.limit() + " and align-length " + BitUtil.align(messageBufferWriter.limit() + OneToManyRingBuffer.HEADER_LENGTH, OneToManyRingBuffer.HEADER_LENGTH));
+
+        boolean success = oneToManyRingBuffer.write(100, messageBufferWriter);
+        publishedMessages.incrementAndGet();
+
+        Assertions.assertTrue(success, "Failed to write message: 100");
+
+        int readMessages = oneToManyRingBuffer.read(0, handler);
+        Assertions.assertEquals(readMessages, publishedMessages.get(), "Read messages not equal to published messages");
     }
 }

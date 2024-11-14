@@ -43,4 +43,10 @@ public class UnsafeBuffer
         UnsafeHelper.UNSAFE.copyMemory(buffer, ARRAY_BASE_OFFSET + index, dstByteArray, dstBaseOffset + dstOffset, length);
     }
 
+    public void clearBytes(final int fromIndex, final int toIndex)
+    {
+        int messageLength = toIndex - fromIndex + 1;
+        UnsafeHelper.UNSAFE.setMemory(buffer, ARRAY_BASE_OFFSET + fromIndex, messageLength, (byte)0);
+    }
+
 }

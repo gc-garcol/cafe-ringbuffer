@@ -18,12 +18,14 @@ public class OneToManyRingBuffer
     private final int maxMsgLength;
     private final int lastConsumerIndex;
 
-    public final static int HEADER_LENGTH = Integer.BYTES * 2; // length, type
+    public static final int HEADER_LENGTH = Integer.BYTES * 3; // length, type, is-last-message
 
     /**
      * Alignment as a multiple of bytes for each record.
      */
-    private final static int ALIGNMENT = HEADER_LENGTH;
+    private static final int ALIGNMENT = 1 << 4;
+
+    private static final int MIN_RECORD_LENGTH = BitUtil.align(Integer.BYTES + HEADER_LENGTH, ALIGNMENT);
 
     public OneToManyRingBuffer(int powSize, int consumerSize)
     {
@@ -89,7 +91,7 @@ public class OneToManyRingBuffer
             {
                 // R E C O R D
                 // . . . . . . C3 . C2 . C1 . . P . . x
-                if (lastConsumerOffset > alignedRecordLength)
+                if (lastConsumerOffset > alignedRecordLength - 1)
                 {
                     realStartOfRecord = 0; // jump to the beginning of the buffer
                 }
@@ -120,15 +122,23 @@ public class OneToManyRingBuffer
 
         UnsafeBuffer buffer = this.unsafeBuffer;
 
+        int nextProducerOffset = expectedEndOffsetOfRecord + 1;
+
+        boolean shouldFlip = nextProducerOffset + MIN_RECORD_LENGTH > capacity - 1;
+        if (shouldFlip)
+        {
+            nextProducerOffset = 0;
+        }
+        boolean isLastMessage = shouldFlip;
+
         // when [2] happened, the [2] ensures that the these instructions are synchronized into main memory as well
         buffer.putBytes(realStartOfRecord + HEADER_LENGTH, message, 0, msgLength);
         buffer.putInt(realStartOfRecord, msgLength);
         buffer.putInt(realStartOfRecord + Integer.BYTES, msgTypeId);
+        buffer.putInt(realStartOfRecord + Integer.BYTES * 2, isLastMessage ? 1 : 0);
 
-        int nextProducerOffset = (expectedEndOffsetOfRecord + 1) % capacity;
-
-        boolean shouldFlip = nextProducerOffset < currentProducerOffset;
-        long newProducerPosition = position(nextProducerOffset, shouldFlip);
+        boolean newProducerFlip = shouldFlip != currentProducerFlip;
+        long newProducerPosition = position(nextProducerOffset, newProducerFlip);
         // [2]: happen-before guarantee for writes
         producerPosition.set(newProducerPosition);
 
@@ -199,9 +209,16 @@ public class OneToManyRingBuffer
             // C1 . . . . . C2 . . . . . x
         }
 
-        // when [2] happened, the [2] ensures that the these instructions are synchronized into main memory as well
+        // when [1] happened, the [1] ensures that the these instructions are loaded from the main memory as well
         int messageLength = unsafeBuffer.getInt(currentConsumerOffset);
+
+        if (messageLength == 0)
+        {
+            return false;
+        }
+
         int messageTypeId = unsafeBuffer.getInt(currentConsumerOffset + Integer.BYTES);
+        boolean isLastMessage = unsafeBuffer.getInt(currentConsumerOffset + Integer.BYTES * 2) == 1;
 
         boolean consumeSuccess = handler.onMessage(messageTypeId, unsafeBuffer, currentConsumerOffset + HEADER_LENGTH, messageLength);
 
@@ -212,12 +229,27 @@ public class OneToManyRingBuffer
 
         int recordLength = messageLength + HEADER_LENGTH;
         int alignedRecordLength = BitUtil.align(recordLength, ALIGNMENT);
-        int nextConsumerOffset = (currentConsumerOffset + alignedRecordLength) % capacity;
+        int nextConsumerOffset = isLastMessage ? 0 : currentConsumerOffset + alignedRecordLength;
 
-        boolean shouldFlip = nextConsumerOffset < currentConsumerOffset;
-        long newConsumerPosition = position(nextConsumerOffset, shouldFlip);
+        boolean newFlip = isLastMessage != currentConsumerFlip;
+        long newConsumerPosition = position(nextConsumerOffset, newFlip);
+
+        if (consumerIndex == lastConsumerIndex)
+        {
+            if (isLastMessage)
+            {
+                unsafeBuffer.clearBytes(currentConsumerOffset, capacity - 1);
+            }
+            else
+            {
+                unsafeBuffer.clearBytes(currentConsumerOffset, nextConsumerOffset - 1);
+            }
+        }
+
         // [2] happen-before guarantee for writes
-        consumerPositions.set(consumerIndex, newConsumerPosition);
+        {
+            consumerPositions.set(consumerIndex, newConsumerPosition);
+        }
 
         return true;
     }
@@ -238,12 +270,6 @@ public class OneToManyRingBuffer
     private boolean sameCircle(boolean firstFlip, boolean secondFlip)
     {
         return firstFlip == secondFlip;
-    }
-
-    private boolean consumerFlip(int consumerIndex)
-    {
-        long consumerPosition = consumerPositions.get(consumerIndex);
-        return flip(consumerPosition);
     }
 
     private int offset(long position)
