@@ -90,6 +90,7 @@ public class OneToManyRingBufferTest
 
         for (int i = 0; i < messages.size(); i++)
         {
+            messageBufferWriter.clear();
             ByteBufferUtil.put(messageBufferWriter, 0, messages.get(i).getBytes());
             messageBufferWriter.flip();
             oneToManyRingBuffer.write(i, messageBufferWriter);
@@ -134,12 +135,13 @@ public class OneToManyRingBufferTest
     {
         List<String> messages = IntStream.range(0, 10).boxed().map(i -> "Hello, world! " + i).toList();
 
-        List<AtomicInteger> consumedIndexes = List.of(new AtomicInteger(), new AtomicInteger(), new AtomicInteger());
+        List<AtomicInteger> consumedIndexes = List.of(new AtomicInteger(), new AtomicInteger());
 
         oneToManyRingBuffer = new OneToManyRingBuffer(10, 2);
 
         for (int i = 0; i < messages.size(); i++)
         {
+            messageBufferWriter.clear();
             ByteBufferUtil.put(messageBufferWriter, 0, messages.get(i).getBytes());
             messageBufferWriter.flip();
             oneToManyRingBuffer.write(i, messageBufferWriter);
@@ -195,5 +197,11 @@ public class OneToManyRingBufferTest
 
         Assertions.assertEquals(messages.size(), consumedIndexes.get(0).get());
         Assertions.assertEquals(messages.size(), consumedIndexes.get(1).get());
+    }
+
+    @Test
+    public void shouldPublishWithLimit_1P1C_10()
+    {
+
     }
 }

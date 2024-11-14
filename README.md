@@ -12,6 +12,20 @@ Simple implementation of a ring-buffer in `Java`.
 
 add `--add-opens java.base/java.nio=ALL-UNNAMED` as a JVM argument
 
+## RingBuffer structure
+
+### RingBuffer message structure
+
+```mermaid
+block-beta
+    1["header: message length"]:1
+    2["header: message type"]:1
+    3("message"):4
+    4["padding"]:1
+style 3 fill:#fcb,stroke:#333,color:#fff
+style 4 fill:#d6d,stroke:#333
+```
+
 ## Reference
 
 - `False sharing`:

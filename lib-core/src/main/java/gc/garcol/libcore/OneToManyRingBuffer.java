@@ -18,7 +18,7 @@ public class OneToManyRingBuffer
     private final int maxMsgLength;
     private final int lastConsumerIndex;
 
-    private final static int HEADER_LENGTH = Integer.BYTES * 2; // length, type
+    public final static int HEADER_LENGTH = Integer.BYTES * 2; // length, type
 
     /**
      * Alignment as a multiple of bytes for each record.
@@ -71,8 +71,9 @@ public class OneToManyRingBuffer
         boolean lastConsumerFlip = flip(lastConsumerPosition);
 
         final int recordLength = msgLength + HEADER_LENGTH;
+        final int alignedRecordLength = BitUtil.align(recordLength, ALIGNMENT);
 
-        final int expectedEndOffsetOfRecord = currentProducerOffset + recordLength;
+        final int expectedEndOffsetOfRecord = currentProducerOffset + alignedRecordLength - 1;
 
         boolean sameCircleWithFirstConsumer = sameCircle(currentProducerFlip, firstConsumerFlip);
         boolean sameCircleWithLastConsumer = sameCircle(currentProducerFlip, lastConsumerFlip);
@@ -88,7 +89,7 @@ public class OneToManyRingBuffer
             {
                 // R E C O R D
                 // . . . . . . C3 . C2 . C1 . . P . . x
-                if (lastConsumerOffset > recordLength)
+                if (lastConsumerOffset > alignedRecordLength)
                 {
                     realStartOfRecord = 0; // jump to the beginning of the buffer
                 }
@@ -209,7 +210,9 @@ public class OneToManyRingBuffer
             return false;
         }
 
-        int nextConsumerOffset = (currentConsumerOffset + HEADER_LENGTH + messageLength + 1) % capacity;
+        int recordLength = messageLength + HEADER_LENGTH;
+        int alignedRecordLength = BitUtil.align(recordLength, ALIGNMENT);
+        int nextConsumerOffset = (currentConsumerOffset + alignedRecordLength) % capacity;
 
         boolean shouldFlip = nextConsumerOffset < currentConsumerOffset;
         long newConsumerPosition = position(nextConsumerOffset, shouldFlip);
