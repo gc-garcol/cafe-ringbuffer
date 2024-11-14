@@ -2,6 +2,12 @@
 
 Simple implementation of a ring-buffer in `Java`.
 
+## Features
+
+- [X] `OneToManyRingBuffer` (also configurable for `OneToOneRingBuffer` usage)
+- [ ] `ManyToOneRingBuffer`
+- [ ] `ManyToManyRingBuffer`
+
 ## Setup
 
 add `--add-opens java.base/java.nio=ALL-UNNAMED` as a JVM argument
