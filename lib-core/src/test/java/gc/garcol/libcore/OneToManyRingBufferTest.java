@@ -8,6 +8,7 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.IntStream;
 
@@ -222,16 +223,15 @@ public class OneToManyRingBufferTest
     @Test
     public void shouldPublishInNextCircle_1P1C_10()
     {
-        List<String> messages = IntStream.range(0, 50).boxed().map(i -> "Hello, world! " + i).toList();
         oneToManyRingBuffer = new OneToManyRingBuffer(10, 1);
 
         AtomicInteger publishedMessages = new AtomicInteger(0);
 
-        Runnable publishMessages = () -> {
-            for (int i = 0; i < messages.size(); i++)
+        BiConsumer<String, Integer> publishMessages = (messageTemplate, messageCount) -> {
+            for (int i = 0; i < messageCount; i++)
             {
                 messageBufferWriter.clear();
-                ByteBufferUtil.put(messageBufferWriter, 0, messages.get(i).getBytes());
+                ByteBufferUtil.put(messageBufferWriter, 0, (messageTemplate + " " + i).getBytes());
                 messageBufferWriter.flip();
                 boolean success = oneToManyRingBuffer.write(i, messageBufferWriter);
                 System.out.println("write message " + i + " with length " + messageBufferWriter.limit() + " and align-length " + BitUtil.align(messageBufferWriter.limit() + OneToManyRingBuffer.HEADER_LENGTH, OneToManyRingBuffer.HEADER_LENGTH));
@@ -243,8 +243,6 @@ public class OneToManyRingBufferTest
                 publishedMessages.incrementAndGet();
             }
         };
-
-        publishMessages.run();
 
         MessageHandler handler = (msgTypeId, buffer, index, length) -> {
             System.out.println("--------------------");
@@ -265,11 +263,15 @@ public class OneToManyRingBufferTest
             return true;
         };
 
+        System.out.println("---- Round [0] ----");
+        String messageTemplate = "Hello, world!";
+        publishMessages.accept(messageTemplate, 50);
+
         oneToManyRingBuffer.read(0, handler, 1);
         publishedMessages.decrementAndGet();
 
         messageBufferWriter.clear();
-        ByteBufferUtil.put(messageBufferWriter, 0, "Hello, world! 1".getBytes());
+        ByteBufferUtil.put(messageBufferWriter, 0, (messageTemplate + " 100").getBytes());
         messageBufferWriter.flip();
         System.out.println("--------");
         System.out.println("write message 100 with length " + messageBufferWriter.limit() + " and align-length " + BitUtil.align(messageBufferWriter.limit() + OneToManyRingBuffer.HEADER_LENGTH, OneToManyRingBuffer.HEADER_LENGTH));
@@ -280,6 +282,15 @@ public class OneToManyRingBufferTest
         Assertions.assertTrue(success, "Failed to write message: 100");
 
         int readMessages = oneToManyRingBuffer.read(0, handler);
+        Assertions.assertEquals(readMessages, publishedMessages.get(), "Read messages not equal to published messages");
+
+        System.out.println("---- Round [1] ----");
+        publishedMessages.set(0);
+
+        messageTemplate = "This is a large message!";
+        publishMessages.accept(messageTemplate, 50);
+
+        readMessages = oneToManyRingBuffer.read(0, handler);
         Assertions.assertEquals(readMessages, publishedMessages.get(), "Read messages not equal to published messages");
     }
 }
