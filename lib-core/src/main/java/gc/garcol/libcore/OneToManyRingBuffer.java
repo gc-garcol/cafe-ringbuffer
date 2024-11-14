@@ -236,20 +236,12 @@ public class OneToManyRingBuffer
 
         if (consumerIndex == lastConsumerIndex)
         {
-            if (isLastMessage)
-            {
-                unsafeBuffer.clearBytes(currentConsumerOffset, capacity - 1);
-            }
-            else
-            {
-                unsafeBuffer.clearBytes(currentConsumerOffset, nextConsumerOffset - 1);
-            }
+            int endClearOffset = isLastMessage ? capacity - 1 : nextConsumerOffset - 1;
+            unsafeBuffer.clearBytes(currentConsumerOffset, endClearOffset);
         }
 
         // [2] happen-before guarantee for writes
-        {
-            consumerPositions.set(consumerIndex, newConsumerPosition);
-        }
+        consumerPositions.set(consumerIndex, newConsumerPosition);
 
         return true;
     }
