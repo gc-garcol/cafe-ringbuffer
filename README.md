@@ -20,7 +20,6 @@ add `--add-opens java.base/java.nio=ALL-UNNAMED` as a JVM argument
 block-beta
     1["header: message length"]:1
     2["header: message type"]:1
-    3["header: is last message"]:1
     4("message"):4
     5["padding"]:1
 style 4 fill:#fcb,stroke:#333,color:#fff

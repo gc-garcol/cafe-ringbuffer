@@ -292,5 +292,13 @@ public class OneToManyRingBufferTest
 
         readMessages = oneToManyRingBuffer.read(0, handler);
         Assertions.assertEquals(readMessages, publishedMessages.get(), "Read messages not equal to published messages");
+
+        System.out.println("---- Round [2] ----");
+        publishedMessages.set(0);
+
+        publishMessages.accept(messageTemplate, 50);
+
+        readMessages = oneToManyRingBuffer.read(0, handler);
+        Assertions.assertEquals(readMessages, publishedMessages.get(), "Read messages not equal to published messages");
     }
 }

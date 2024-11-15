@@ -18,12 +18,12 @@ public class OneToManyRingBuffer
     private final int maxMsgLength;
     private final int lastConsumerIndex;
 
-    public static final int HEADER_LENGTH = Integer.BYTES * 3; // length, type, is-last-message
+    public static final int HEADER_LENGTH = Integer.BYTES * 2; // length, type
 
     /**
      * Alignment as a multiple of bytes for each record.
      */
-    private static final int ALIGNMENT = 1 << 4;
+    private static final int ALIGNMENT = HEADER_LENGTH;
 
     private static final int MIN_RECORD_LENGTH = BitUtil.align(Integer.BYTES + HEADER_LENGTH, ALIGNMENT);
 
@@ -129,13 +129,11 @@ public class OneToManyRingBuffer
         {
             nextProducerOffset = 0;
         }
-        boolean isLastMessage = shouldFlip;
 
         // when [2] happened, the [2] ensures that the these instructions are synchronized into main memory as well
         buffer.putBytes(realStartOfRecord + HEADER_LENGTH, message, 0, msgLength);
         buffer.putInt(realStartOfRecord, msgLength);
         buffer.putInt(realStartOfRecord + Integer.BYTES, msgTypeId);
-        buffer.putInt(realStartOfRecord + Integer.BYTES * 2, isLastMessage ? 1 : 0);
 
         boolean newProducerFlip = shouldFlip != currentProducerFlip;
         long newProducerPosition = position(nextProducerOffset, newProducerFlip);
@@ -212,13 +210,25 @@ public class OneToManyRingBuffer
         // when [1] happened, the [1] ensures that the these instructions are loaded from the main memory as well
         int messageLength = unsafeBuffer.getInt(currentConsumerOffset);
 
+        boolean isLastMessage = false;
         if (messageLength == 0)
         {
-            return false;
+
+            //  R E C O R D
+            //  . . . . . . C2 0 0 0
+            //              C1
+            //              P
+            if (sameCircle(currentConsumerFlip, previousFlip))
+            {
+                return false;
+            }
+
+            // R  E C O R D
+            // C1 . . . . . . C2 0 0 0
+            isLastMessage = true;
         }
 
         int messageTypeId = unsafeBuffer.getInt(currentConsumerOffset + Integer.BYTES);
-        boolean isLastMessage = unsafeBuffer.getInt(currentConsumerOffset + Integer.BYTES * 2) == 1;
 
         boolean consumeSuccess = handler.onMessage(messageTypeId, unsafeBuffer, currentConsumerOffset + HEADER_LENGTH, messageLength);
 
