@@ -22,7 +22,7 @@ public class Unicast1P1C_OneToManyRingBufferPlan
 
     OneToManyRingBuffer ringBuffer;
     byte[] data = "Hello, World!".getBytes();
-    ByteBuffer writeBuffer = ByteBuffer.allocate(1 << 10);
+    ByteBuffer writeBuffer = ByteBuffer.allocate(1 << 16);
     MessageHandler messageHandler;
     AtomicBoolean consumerRunning = new AtomicBoolean(true);
 
