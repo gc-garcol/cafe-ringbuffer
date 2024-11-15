@@ -44,6 +44,7 @@ public class OneToManyRingBuffer
         lastConsumerIndex = consumerSize - 1;
 
         maxMsgLength = capacity >> 3;
+        System.out.println("capacity: " + capacity + "| maxMsgLength: " + maxMsgLength);
     }
 
     /**
@@ -189,6 +190,13 @@ public class OneToManyRingBuffer
         if (sameCircle(currentConsumerFlip, previousFlip))
         {
 
+            // . . . . . P . . . . . x
+            //           C1
+
+            // or
+
+            // . . . . . C1 . . . . . x
+            //           C2
             if (currentConsumerOffset >= previousBarrier)
             {
                 return false;
@@ -209,7 +217,6 @@ public class OneToManyRingBuffer
         if (messageLength == 0)
         {
 
-            //  R E C O R D
             //  . . . . . . C2 0 0 0
             //              C1
             //              P

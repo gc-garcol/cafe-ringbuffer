@@ -17,8 +17,6 @@ bin/
 !**/src/main/**/bin/
 !**/src/test/**/bin/
 
-*.log
-
 ### IntelliJ IDEA ###
 .idea
 *.iws
@@ -37,5 +35,4 @@ out/
 
 ### VS Code ###
 .vscode/
-
-benchmark-result/**
+.env
