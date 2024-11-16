@@ -44,7 +44,6 @@ public class OneToManyRingBuffer
         lastConsumerIndex = consumerSize - 1;
 
         maxMsgLength = capacity >> 3;
-        System.out.println("capacity: " + capacity + "| maxMsgLength: " + maxMsgLength);
     }
 
     /**

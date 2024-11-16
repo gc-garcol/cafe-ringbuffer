@@ -1,6 +1,6 @@
 # Cafe ring-buffer
 
-Simple implementation of a ring-buffer in `Java`.
+A project implementing a high-performance ring buffer capable of processing and delivering 10 million messages per second.
 
 Benchmark Unicast: 1P – 1C
 ![benchmark](docs/unicast_1p1c.png)
