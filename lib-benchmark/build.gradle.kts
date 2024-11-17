@@ -35,3 +35,11 @@ tasks.withType<JavaCompile> {
     options.annotationProcessorPath = configurations.getByName("annotationProcessor")
 }
 
+tasks {
+    task("run-unicast1p1c", JavaExec::class) {
+        group = "run"
+        classpath = sourceSets.main.get().runtimeClasspath
+        mainClass.set("gc.garcol.libbenchmark.Unicast1P1C_OneToManyRingBufferRunner")
+    }
+}
+

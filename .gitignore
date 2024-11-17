@@ -38,4 +38,4 @@ out/
 ### VS Code ###
 .vscode/
 
-benchmark-result/**
+benchmark-result.**.json

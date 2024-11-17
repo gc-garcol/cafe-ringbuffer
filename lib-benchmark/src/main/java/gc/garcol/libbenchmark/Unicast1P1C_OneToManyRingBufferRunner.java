@@ -18,7 +18,7 @@ public class Unicast1P1C_OneToManyRingBufferRunner
         Options options = new OptionsBuilder()
             .include(Unicast1P1C_OneToManyRingBufferBechmark.class.getSimpleName())
             .resultFormat(ResultFormatType.JSON)
-            .result("benchmark-result/Unicast1P1C_one-to-many-ring-buffer.json")
+            .result("benchmark-result.Unicast1P1C_one-to-many-ring-buffer.json")
             .jvmArgs("--add-opens", "java.base/java.nio=ALL-UNNAMED") // Add JVM argument
             .build();
         new Runner(options).run();
