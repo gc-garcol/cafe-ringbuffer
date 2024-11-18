@@ -15,15 +15,7 @@ Benchmark Unicast: 1P – 1C
 
 ### RingBuffer message structure
 
-```mermaid
-block-beta
-    1["header: message length"]:1
-    2["header: message type"]:1
-    4("message"):4
-    5["padding"]:1
-style 4 fill:#fcb,stroke:#333,color:#fff
-style 5 fill:#d6d,stroke:#333
-```
+![record](docs/ringbuffer-record.png)
 
 ## Usage
 A Simple Example (A Simple Example (to have the best performance, should reuse the `ByteBuffer` in `publish` and `consume`))
