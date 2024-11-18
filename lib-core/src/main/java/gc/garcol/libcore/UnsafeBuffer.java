@@ -29,6 +29,16 @@ public class UnsafeBuffer
         return UnsafeHelper.UNSAFE.getInt(buffer, ARRAY_BASE_OFFSET + index);
     }
 
+    public void putLong(final int index, final long value)
+    {
+        UnsafeHelper.UNSAFE.putLong(buffer, ARRAY_BASE_OFFSET + index, value);
+    }
+
+    public long getLong(final int index)
+    {
+        return UnsafeHelper.UNSAFE.getLong(buffer, ARRAY_BASE_OFFSET + index);
+    }
+
     public void putBytes(final int index, final ByteBuffer srcBuffer, final int srcIndex, final int length)
     {
         final byte[] srcByteArray = BufferUtil.array(srcBuffer);

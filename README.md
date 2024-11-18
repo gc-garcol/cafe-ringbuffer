@@ -1,6 +1,7 @@
 # Cafe ring-buffer
 
-A project implementing a high-performance ring buffer capable of processing and delivering 10 million messages per second.
+
+Developed a high-performance ring buffer leveraging low-level `unsafe` operations to optimize for speed, capable of processing and delivering over 10 million messages per second.
 
 Benchmark `Unicast`: `1P – 1C`: Achieved the transfer of approximately 11,000 records with an average latency of 89 nanoseconds per record.
 ![benchmark](docs/benchmark_unicast_1p1c.png)
