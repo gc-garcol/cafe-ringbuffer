@@ -2,8 +2,11 @@
 
 A project implementing a high-performance ring buffer capable of processing and delivering 10 million messages per second.
 
-Benchmark Unicast: 1P – 1C
-![benchmark](docs/unicast_1p1c.png)
+Benchmark `Unicast`: `1P – 1C`: Achieved the transfer of approximately 11,000 records with an average latency of 89 nanoseconds per record.
+![benchmark](docs/benchmark_unicast_1p1c.png)
+
+Benchmark `Three Step Pipeline`: `1P – 3C`: Achieved the transfer of approximately 7,500 records with an average latency of 132 nanoseconds per record.
+![benchmark](docs/benchmark_pipeline_1p3c.png)
 
 ## Features
 
@@ -12,6 +15,10 @@ Benchmark Unicast: 1P – 1C
 - [ ] `ManyToManyRingBuffer`
 
 ## RingBuffer structure
+
+### RingBuffer structure overview
+
+![ringbuffer](docs/ringbuffer-overview.png)
 
 ### RingBuffer message structure
 

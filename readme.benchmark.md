@@ -8,7 +8,7 @@
 ./gradlew :lib-benchmark:run-unicast1p1c
 ```
 
-![benchmark](docs/unicast_1p1c.png)
+![benchmark](docs/benchmark_unicast_1p1c.png)
 
 ## Reference
 

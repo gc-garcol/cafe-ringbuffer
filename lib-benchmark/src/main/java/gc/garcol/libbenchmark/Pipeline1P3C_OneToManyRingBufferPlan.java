@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @since 2024
  */
 @State(Scope.Benchmark)
-public class Unicast1P1C_OneToManyRingBufferPlan
+public class Pipeline1P3C_OneToManyRingBufferPlan
 {
 
     OneToManyRingBuffer ringBuffer;
@@ -29,7 +29,7 @@ public class Unicast1P1C_OneToManyRingBufferPlan
     @Setup(Level.Trial)
     public void setUp(Blackhole blackhole) throws InterruptedException
     {
-        ringBuffer = new OneToManyRingBuffer(16, 1);
+        ringBuffer = new OneToManyRingBuffer(16, 3);
 
         messageHandler = new MessageHandler()
         {
@@ -40,18 +40,38 @@ public class Unicast1P1C_OneToManyRingBufferPlan
             }
         };
 
-        final CountDownLatch consumerStartedLatch = new CountDownLatch(1);
+        final CountDownLatch consumerStartedLatch = new CountDownLatch(3);
 
-        final Thread eventHandler = new Thread(() ->
+        final Thread eventHandler1 = new Thread(() ->
         {
             consumerStartedLatch.countDown();
             while (consumerRunning.get())
             {
                 ringBuffer.read(0, messageHandler);
-                Thread.yield();
             }
         });
-        eventHandler.start();
+
+        final Thread eventHandler2 = new Thread(() ->
+        {
+            consumerStartedLatch.countDown();
+            while (consumerRunning.get())
+            {
+                ringBuffer.read(1, messageHandler);
+            }
+        });
+
+        final Thread eventHandler3 = new Thread(() ->
+        {
+            consumerStartedLatch.countDown();
+            while (consumerRunning.get())
+            {
+                ringBuffer.read(2, messageHandler);
+            }
+        });
+
+        eventHandler1.start();
+        eventHandler2.start();
+        eventHandler3.start();
         consumerStartedLatch.await();
     }
 
