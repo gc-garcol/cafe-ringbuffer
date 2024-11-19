@@ -270,15 +270,8 @@ public class OneToManyRingBuffer
 
     private void checkMsgLength(final int length)
     {
-        if (length < 0)
-        {
-            throw new IllegalArgumentException("invalid message length=" + length);
-        }
-        else if (length > maxMsgLength)
-        {
-            throw new IllegalArgumentException(
-                "encoded message exceeds maxMsgLength=" + maxMsgLength + ", length=" + length);
-        }
+        Preconditions.checkArgument(length >= 0, "invalid message length=" + length);
+        Preconditions.checkArgument(length <= maxMsgLength, "encoded message exceeds maxMsgLength=" + maxMsgLength + ", length=" + length);
     }
 
     private boolean sameCircle(boolean firstFlip, boolean secondFlip)
