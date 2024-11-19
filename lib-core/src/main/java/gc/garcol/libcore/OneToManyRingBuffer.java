@@ -27,16 +27,9 @@ public class OneToManyRingBuffer
 
     public OneToManyRingBuffer(int powSize, int consumerSize)
     {
-
-        if (powSize < 10)
-        {
-            throw new IllegalArgumentException("Ring buffer size must be greater than 1024");
-        }
-
-        if (consumerSize < 1)
-        {
-            throw new IllegalArgumentException("Consumer size must be greater than 0");
-        }
+        Preconditions.checkArgument(powSize >= 10, "Ring buffer size must be greater than 1024");
+        Preconditions.checkArgument(powSize <= 31, "Ring buffer size must be less than 2^31");
+        Preconditions.checkArgument(consumerSize >= 1, "Consumer size must be greater than 0");
 
         capacity = 1 << powSize;
         unsafeBuffer = new UnsafeBuffer(capacity);
