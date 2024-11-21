@@ -1,4 +1,7 @@
 # Cafe ring-buffer
+
+![Github Action](https://github.com/gc-garcol/cafe-ringbuffer/actions/workflows/gradle-publish.yml/badge.svg)
+
 Developed a high-performance ring buffer leveraging `lock-free` and low-level `unsafe` operations to optimize for speed, capable of processing and delivering over 10 million messages per second.
 
 | Benchmark                                                                        | Results                                                    |
