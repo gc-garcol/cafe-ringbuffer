@@ -5,6 +5,10 @@ import sun.misc.Unsafe;
 import java.lang.reflect.Field;
 
 /**
+ * Utility class for accessing the Unsafe class.
+ * Provides a static reference to the Unsafe instance.
+ * Ensures the Unsafe instance is loaded and accessible.
+ *
  * @author thaivc
  * @since 2024
  */

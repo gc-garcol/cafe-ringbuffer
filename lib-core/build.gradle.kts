@@ -1,11 +1,13 @@
+import org.jreleaser.model.Active
+
 plugins {
     `java-library`
     `maven-publish`
     id("org.jreleaser") version "1.15.0"
 }
 
-group = "gc.garcol"
-version = "0.0.1-SNAPSHOT"
+group = "io.github.gc-garcol"
+version = "0.0.1"
 
 java {
     toolchain {
@@ -17,13 +19,9 @@ repositories {
     mavenCentral()
 }
 
-var lombokVersion = "1.18.34"
 var jupiterVersion = "5.11.3"
 
 dependencies {
-    compileOnly("org.projectlombok:lombok:${lombokVersion}")
-    annotationProcessor("org.projectlombok:lombok:${lombokVersion}")
-
     testImplementation("org.junit.jupiter:junit-jupiter-api:${jupiterVersion}")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${jupiterVersion}")
 }
@@ -41,7 +39,7 @@ java {
 publishing {
     publications {
         create<MavenPublication>("maven") {
-            groupId = "gc.garcol"
+            groupId = "io.github.gc-garcol"
             artifactId = "cafe-ringbuffer"
 
             from(components["java"])
@@ -74,7 +72,12 @@ publishing {
 
     repositories {
         maven {
-            url = layout.buildDirectory.dir("staging-deploy").get().asFile.toURI()
+            name = "GitHubPackages"
+            url = uri("https://maven.pkg.github.com/gc-garcol/cafe-ringbuffer")
+            credentials {
+                username = System.getenv("GITHUB_ACTOR")
+                password = System.getenv("GITHUB_TOKEN")
+            }
         }
     }
 }

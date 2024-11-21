@@ -5,6 +5,10 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
 
 /**
+ * A ring buffer that supports one producer and multiple consumers.
+ * Provides methods to write messages to the buffer and read messages from the buffer.
+ * Ensures memory visibility guarantees using happen-before relationships.
+ *
  * @author thaivc
  * @since 2024
  */
@@ -18,13 +22,24 @@ public class OneToManyRingBuffer
     private final int maxMsgLength;
     private final int lastConsumerIndex;
 
+    /**
+     * The length of the header in bytes.
+     * The header contains the length and type of the message.
+     */
     public static final int HEADER_LENGTH = Integer.BYTES * 2; // length, type
 
     /**
      * Alignment as a multiple of bytes for each record.
+     * Padding to align the record in order to prevent false sharing.
      */
     public static final int ALIGNMENT = Long.BYTES * 8; // padding to align the record in order to prevent false sharing
 
+    /**
+     * Constructs a OneToManyRingBuffer with the specified size and number of consumers.
+     *
+     * @param powSize      the power of two size for the ring buffer
+     * @param consumerSize the number of consumers
+     */
     public OneToManyRingBuffer(int powSize, int consumerSize)
     {
         Preconditions.checkArgument(powSize >= 10, "Ring buffer size must be greater than 1024");
@@ -40,11 +55,11 @@ public class OneToManyRingBuffer
     }
 
     /**
-     * Write a message to the ring buffer
+     * Writes a message to the ring buffer.
      *
-     * @param msgTypeId
-     * @param message   the message to write, the limit must be equals to the message length
-     * @return the message was written successfully or not
+     * @param msgTypeId the type identifier of the message
+     * @param message   the message to write, the limit must be equal to the message length
+     * @return true if the message was written successfully, false otherwise
      */
     public boolean write(int msgTypeId, ByteBuffer message)
     {
@@ -133,7 +148,11 @@ public class OneToManyRingBuffer
     }
 
     /**
-     * Read message from the ring buffer, apply for consumeIndex-th consumer
+     * Reads messages from the ring buffer for the specified consumer.
+     *
+     * @param consumerIndex the index of the consumer
+     * @param handler       the handler to process the messages
+     * @return the number of messages read
      */
     public int read(int consumerIndex, final MessageHandler handler)
     {
@@ -141,10 +160,10 @@ public class OneToManyRingBuffer
     }
 
     /**
-     * Read message from the ring buffer, apply for consumeIndex-th consumer
+     * Reads messages from the ring buffer for the specified consumer with a limit.
      *
      * @param consumerIndex the index of the consumer
-     * @param handler       the handler to process the message
+     * @param handler       the handler to process the messages
      * @param limit         the maximum number of messages to read
      * @return the number of messages read
      */
@@ -161,11 +180,11 @@ public class OneToManyRingBuffer
     }
 
     /**
-     * Read one message from the ring buffer, apply for consumeIndex-th consumer
+     * Reads one message from the ring buffer for the specified consumer.
      *
      * @param consumerIndex the index of the consumer
      * @param handler       the handler to process the message
-     * @return true if a message was read otherwise false
+     * @return true if a message was read, false otherwise
      */
     public boolean readOne(int consumerIndex, final MessageHandler handler)
     {

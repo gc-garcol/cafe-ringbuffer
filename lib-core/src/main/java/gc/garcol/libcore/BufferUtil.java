@@ -5,14 +5,31 @@ import java.lang.invoke.VarHandle;
 import java.nio.ByteBuffer;
 
 /**
+ * Utility class for working with ByteBuffers using VarHandles.
+ * Provides methods to access the underlying byte array and its offset.
+ *
  * @author thaivc
  * @since 2024
  */
 public class BufferUtil
 {
 
+    /**
+     * The base offset of the byte array in memory.
+     * Used for calculating the memory address of array elements.
+     */
     public static final long ARRAY_BASE_OFFSET = UnsafeHelper.UNSAFE.arrayBaseOffset(byte[].class);
+
+    /**
+     * VarHandle for accessing the "hb" field in ByteBuffer.
+     * This field represents the underlying byte array of the ByteBuffer.
+     */
     public static final VarHandle BYTE_BUFFER_HB_HANDLE;
+
+    /**
+     * VarHandle for accessing the "offset" field in ByteBuffer.
+     * This field represents the offset of the underlying byte array in the ByteBuffer.
+     */
     public static final VarHandle BYTE_BUFFER_OFFSET_HANDLE;
 
     static
@@ -34,6 +51,13 @@ public class BufferUtil
         }
     }
 
+    /**
+     * Returns the underlying byte array of the given ByteBuffer.
+     *
+     * @param buffer the ByteBuffer to extract the byte array from
+     * @return the underlying byte array
+     * @throws IllegalArgumentException if the buffer is direct
+     */
     public static byte[] array(final ByteBuffer buffer)
     {
         if (buffer.isDirect())
@@ -44,6 +68,12 @@ public class BufferUtil
         return (byte[])BYTE_BUFFER_HB_HANDLE.get(buffer);
     }
 
+    /**
+     * Returns the offset of the underlying byte array in the given ByteBuffer.
+     *
+     * @param buffer the ByteBuffer to extract the offset from
+     * @return the offset of the underlying byte array
+     */
     public static int arrayOffset(final ByteBuffer buffer)
     {
         return (int)BYTE_BUFFER_OFFSET_HANDLE.get(buffer);
