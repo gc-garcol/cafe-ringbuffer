@@ -18,11 +18,11 @@ Developed a high-performance ring buffer leveraging `lock-free` and low-level `u
 
 ### RingBuffer structure overview
 
-![ringbuffer](docs/ringbuffer-overview.png)
+![ringbuffer](readme/ringbuffer-overview.png)
 
 ### RingBuffer message structure
 
-![record](docs/ringbuffer-record.png)
+![record](readme/ringbuffer-record.png)
 
 ## Usage
 A Simple Example (A Simple Example (to have the best performance, should reuse the `ByteBuffer` in `publish` and `consume`))
