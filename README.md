@@ -6,10 +6,10 @@ Developed a high-performance ring buffer leveraging `lock-free` and low-level `u
 
 [Cafe RingBuffer Javadoc](https://gc-garcol.github.io/cafe-ringbuffer/index-all.html)
 
-| Benchmark                                                                        | Results                                                      |
-|----------------------------------------------------------------------------------|--------------------------------------------------------------|
-| `Unicast`-`1P – 1C` throughput: 11,200 messages. Avg-latency: 89.4 ns            | <img src="readme/benchmark_unicast_1p1c.png" width="100%"/>  |
-| `Three Step Pipeline`-`1P – 3C` throughput: 7,800 messages.Avg-latency: 132.2 ns | <img src="readme/benchmark_pipeline_1p3c.png" width="100%"/> |
+| Benchmark                                                                                       | Results                                                      |
+|-------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
+| `Unicast`-`1P – 1C` <br>throughput: 11,200,000 messages/s. <br> Avg-latency: 89.4 ns            | <img src="readme/benchmark_unicast_1p1c.png" width="100%"/>  |
+| `Three Step Pipeline`-`1P – 3C` <br>throughput: 7,800,000 messages/s. <br>Avg-latency: 132.2 ns | <img src="readme/benchmark_pipeline_1p3c.png" width="100%"/> |
 ## Features
 
 - [X] `OneToManyRingBuffer` (also configurable for `OneToOneRingBuffer` usage)

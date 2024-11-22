@@ -1,11 +1,10 @@
 plugins {
     `java-library`
     `maven-publish`
-    id("org.jreleaser") version "1.15.0"
 }
 
 group = "io.github.gc-garcol"
-version = "0.0.4"
+version = "1.0.0"
 
 java {
     toolchain {
@@ -45,7 +44,7 @@ publishing {
             pom {
                 name.set("cafe-ringbuffer")
                 description.set("cafe-ringbuffer")
-                url.set("https://github.com/gc-garcol/cafe-ringbuffer")
+                url.set("https://gc-garcol.github.io/cafe-ringbuffer/gc/garcol/libcore/package-summary.html")
                 inceptionYear.set("2024")
                 licenses {
                     license {
@@ -69,21 +68,16 @@ publishing {
     }
 
     repositories {
-        maven {
-            name = "GitHubPackages"
-            url = uri("https://maven.pkg.github.com/gc-garcol/cafe-ringbuffer")
-            credentials {
-                username = System.getenv("GITHUB_ACTOR")
-                password = System.getenv("GITHUB_TOKEN")
-            }
-        }
 //        maven {
-//            name = "MavenCentral"
-//            url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+//            name = "GitHubPackages"
+//            url = uri("https://maven.pkg.github.com/gc-garcol/cafe-ringbuffer")
 //            credentials {
-//                username = System.getenv("MAVEN_USERNAME")
-//                password = System.getenv("MAVEN_PASSWORD")
+//                username = System.getenv("GITHUB_ACTOR")
+//                password = System.getenv("GITHUB_TOKEN")
 //            }
 //        }
+        maven {
+            url = layout.buildDirectory.dir("staging-deploy").get().asFile.toURI()
+        }
     }
 }
