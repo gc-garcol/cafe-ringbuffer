@@ -1,10 +1,8 @@
 # Cafe ring-buffer
 
-![Github Action](https://github.com/gc-garcol/cafe-ringbuffer/actions/workflows/gradle-publish.yml/badge.svg)
+[![javadoc](https://javadoc.io/badge2/io.github.gc-garcol/cafe-ringbuffer/javadoc.svg)](https://javadoc.io/doc/io.github.gc-garcol/cafe-ringbuffer)
 
 Developed a high-performance ring buffer leveraging `lock-free` and low-level `unsafe` operations to optimize for speed, capable of processing and delivering over 10 million messages per second.
-
-[Cafe RingBuffer Javadoc](https://gc-garcol.github.io/cafe-ringbuffer/index-all.html)
 
 | Benchmark                                                                                       | Results                                                      |
 |-------------------------------------------------------------------------------------------------|--------------------------------------------------------------|
@@ -27,6 +25,23 @@ Developed a high-performance ring buffer leveraging `lock-free` and low-level `u
 ![record](readme/ringbuffer-record.png)
 
 ## Usage
+
+### [Installation](https://central.sonatype.com/artifact/io.github.gc-garcol/cafe-ringbuffer)
+
+Gradle kotlin
+```
+implementation("io.github.gc-garcol:cafe-ringbuffer:1.0.0")
+```
+
+Apache maven
+```xml
+<dependency>
+    <groupId>io.github.gc-garcol</groupId>
+    <artifactId>cafe-ringbuffer</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
+
 A Simple Example (A Simple Example (to have the best performance, should reuse the `ByteBuffer` in `publish` and `consume`))
 
 - Initialize the RingBuffer with a capacity of 1024 and a total of 2 consumers.
