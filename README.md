@@ -29,7 +29,7 @@ Developed a high-performance ring buffer leveraging `lock-free` and low-level `u
 ### [Installation](https://central.sonatype.com/artifact/io.github.gc-garcol/cafe-ringbuffer)
 
 Gradle kotlin
-```
+```kotlin
 implementation("io.github.gc-garcol:cafe-ringbuffer:1.0.0")
 ```
 
