@@ -16,6 +16,13 @@ public class UnsafeHelper
 {
     static final Unsafe UNSAFE;
 
+    /**
+     * Private constructor to prevent instantiation.
+     */
+    private UnsafeHelper()
+    {
+    }
+
     static
     {
         try
