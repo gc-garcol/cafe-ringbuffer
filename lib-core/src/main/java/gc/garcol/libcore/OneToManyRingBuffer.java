@@ -4,6 +4,8 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicLongArray;
 
+import static gc.garcol.libcore.RingBufferUtil.*;
+
 /**
  * A ring buffer that supports one producer and multiple consumers.
  * Provides methods to write messages to the buffer and read messages from the buffer.
@@ -64,7 +66,7 @@ public class OneToManyRingBuffer
     public boolean write(int msgTypeId, ByteBuffer message)
     {
         int msgLength = message.limit();
-        checkMsgLength(msgLength);
+        checkMsgLength(msgLength, maxMsgLength);
 
         // [1] happen-before guarantee for reads
         long currentProducerPosition = producerPosition.get();
@@ -285,31 +287,5 @@ public class OneToManyRingBuffer
         consumerPositions.set(consumerIndex, newConsumerPosition);
 
         return true;
-    }
-
-    private void checkMsgLength(final int length)
-    {
-        Preconditions.checkArgument(length >= 0, "invalid message length=" + length);
-        Preconditions.checkArgument(length <= maxMsgLength, "encoded message exceeds maxMsgLength=" + maxMsgLength + ", length=" + length);
-    }
-
-    private boolean sameCircle(boolean firstFlip, boolean secondFlip)
-    {
-        return firstFlip == secondFlip;
-    }
-
-    private int offset(long position)
-    {
-        return (int)(position >> 32);
-    }
-
-    private boolean flip(long position)
-    {
-        return (int)(position & 0xFFFFFFFFL) == 1;
-    }
-
-    private long position(int offset, boolean flip)
-    {
-        return ((long)offset << 32) | (flip ? 1 : 0);
     }
 }
