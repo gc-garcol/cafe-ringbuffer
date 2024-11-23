@@ -10,6 +10,14 @@ import java.nio.ByteBuffer;
  */
 public class ByteBufferUtil
 {
+
+    /**
+     * Private constructor to prevent instantiation.
+     */
+    private ByteBufferUtil()
+    {
+    }
+
     /**
      * Puts the given byte array into the specified ByteBuffer at the given index.
      * Updates the buffer's position to the end of the inserted data.

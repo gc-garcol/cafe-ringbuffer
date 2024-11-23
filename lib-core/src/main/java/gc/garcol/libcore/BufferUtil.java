@@ -15,6 +15,13 @@ public class BufferUtil
 {
 
     /**
+     * Private constructor to prevent instantiation.
+     */
+    private BufferUtil()
+    {
+    }
+
+    /**
      * The base offset of the byte array in memory.
      * Used for calculating the memory address of array elements.
      */

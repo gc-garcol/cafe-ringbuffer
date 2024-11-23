@@ -10,6 +10,14 @@ package gc.garcol.libcore;
  */
 public class Preconditions
 {
+
+    /**
+     * Private constructor to prevent instantiation.
+     */
+    private Preconditions()
+    {
+    }
+
     /**
      * Checks if the provided argument condition is true.
      * Throws an IllegalArgumentException with the specified message if the condition is false.

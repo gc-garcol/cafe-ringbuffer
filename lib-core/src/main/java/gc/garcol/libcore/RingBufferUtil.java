@@ -8,6 +8,14 @@ package gc.garcol.libcore;
  */
 public class RingBufferUtil
 {
+
+    /**
+     * Private constructor to prevent instantiation.
+     */
+    private RingBufferUtil()
+    {
+    }
+
     /**
      * Checks if the message length is within the valid range.
      *

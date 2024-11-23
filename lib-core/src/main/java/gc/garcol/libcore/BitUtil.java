@@ -5,6 +5,14 @@ package gc.garcol.libcore;
  */
 public class BitUtil
 {
+
+    /**
+     * Private constructor to prevent instantiation.
+     */
+    private BitUtil()
+    {
+    }
+
     /**
      * <p>
      * Align a value to the next multiple up of alignment.

@@ -8,6 +8,14 @@ package gc.garcol.libcore;
  */
 public class MemoryAccess
 {
+
+    /**
+     * Private constructor to prevent instantiation.
+     */
+    private MemoryAccess()
+    {
+    }
+
     /**
      * Ensures that all previous loads are visible to subsequent loads.
      * This method uses Unsafe's loadFence to provide the memory fence.

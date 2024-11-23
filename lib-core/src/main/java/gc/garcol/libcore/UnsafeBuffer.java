@@ -12,9 +12,9 @@ import static gc.garcol.libcore.BufferUtil.ARRAY_BASE_OFFSET;
  * @author thaivc
  * @since 2024
  */
-@SuppressWarnings("javadoc")
 public class UnsafeBuffer
 {
+
     private final byte[] buffer;
 
     /**
