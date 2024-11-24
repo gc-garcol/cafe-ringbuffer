@@ -1,5 +1,6 @@
 # Cafe ring-buffer
 
+[![Maven Central Version](https://img.shields.io/maven-central/v/io.github.gc-garcol/cafe-ringbuffer?logo=sonatype&logoColor=red&style=flat&label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.gc-garcol/cafe-ringbuffer)
 [![javadoc](https://javadoc.io/badge2/io.github.gc-garcol/cafe-ringbuffer/javadoc.svg?)](https://javadoc.io/doc/io.github.gc-garcol/cafe-ringbuffer)
 
 Developed a high-performance ring buffer leveraging `lock-free` and low-level `unsafe` operations to optimize for speed, capable of processing and delivering over 10 million messages per second.
