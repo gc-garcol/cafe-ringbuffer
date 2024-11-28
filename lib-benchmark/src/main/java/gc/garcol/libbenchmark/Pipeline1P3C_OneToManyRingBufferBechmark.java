@@ -19,8 +19,8 @@ import java.util.concurrent.TimeUnit;
 public class Pipeline1P3C_OneToManyRingBufferBechmark
 {
     @Benchmark
-    @Timeout(time = 15)
-    @Warmup(iterations = 1, time = 1)
+    @Timeout(time = 20)
+    @Warmup(iterations = 3, time = 20)
     public void publish(Pipeline1P3C_OneToManyRingBufferPlan ringBufferPlan, Blackhole blackhole) throws IOException
     {
         ringBufferPlan.writeBuffer.clear();

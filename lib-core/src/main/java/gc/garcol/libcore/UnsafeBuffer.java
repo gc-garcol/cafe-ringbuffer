@@ -61,6 +61,17 @@ public class UnsafeBuffer
     }
 
     /**
+     * Puts a long value at the specified index with volatile semantics.
+     *
+     * @param index the index at which the value will be put
+     * @param value the long value to put
+     */
+    public void putLongVolatile(final int index, final long value)
+    {
+        UnsafeHelper.UNSAFE.putLongVolatile(buffer, ARRAY_BASE_OFFSET + index, value);
+    }
+
+    /**
      * Gets a long value from the specified index.
      *
      * @param index the index from which the value will be retrieved
@@ -69,6 +80,17 @@ public class UnsafeBuffer
     public long getLong(final int index)
     {
         return UnsafeHelper.UNSAFE.getLong(buffer, ARRAY_BASE_OFFSET + index);
+    }
+
+    /**
+     * Gets a long value from the specified index with volatile semantics.
+     *
+     * @param index the index from which the value will be retrieved
+     * @return the long value at the specified index
+     */
+    public long getLongVolatile(final int index)
+    {
+        return UnsafeHelper.UNSAFE.getLongVolatile(buffer, ARRAY_BASE_OFFSET + index);
     }
 
     /**
