@@ -1,8 +1,6 @@
 package gc.garcol.libcore;
 
 import java.nio.ByteBuffer;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicLongArray;
 
 import static gc.garcol.libcore.RingBufferUtil.*;
 
@@ -17,12 +15,20 @@ import static gc.garcol.libcore.RingBufferUtil.*;
 public class OneToManyRingBuffer
 {
     private final UnsafeBuffer unsafeBuffer;
-    private final AtomicLong producerPosition = new AtomicLong();
-    private final AtomicLongArray consumerPositions;
+
+    /**
+     * The pointers buffer contains the producer position and consumer positions.
+     * <p>
+     * [(64 - 8) padding bytes] | producer position: 8 bytes |  [(64 - 8) padding bytes] | consumer position 1: 8 bytes | ... | [(64 - 8) padding bytes] | consumer position n: 8 bytes | 64 padding bytes
+     */
+    private final UnsafeBuffer pointers;
 
     private final int capacity;
     private final int maxMsgLength;
     private final int lastConsumerIndex;
+
+    private final int producerPointerIndex;
+    private final int[] consumerPointerIndexes;
 
     /**
      * The length of the header in bytes.
@@ -50,8 +56,17 @@ public class OneToManyRingBuffer
 
         capacity = 1 << powSize;
         unsafeBuffer = new UnsafeBuffer(capacity);
-        consumerPositions = new AtomicLongArray(consumerSize);
+        pointers = new UnsafeBuffer((Long.BYTES * 7) * (consumerSize + 1) + Long.BYTES * 8);
         lastConsumerIndex = consumerSize - 1;
+
+        producerPointerIndex = Long.BYTES * 7;
+        consumerPointerIndexes = new int[consumerSize];
+
+        consumerPointerIndexes[0] = Long.BYTES * 7 + Long.BYTES + Long.BYTES * 7; // padding + producer-pointer-block + padding
+        for (int i = 1; i < consumerSize; i++)
+        {
+            consumerPointerIndexes[i] = consumerPointerIndexes[i - 1] + Long.BYTES + Long.BYTES * 7; // padding + consumer-pointer-block + padding
+        }
 
         maxMsgLength = capacity >> 3;
     }
@@ -69,9 +84,9 @@ public class OneToManyRingBuffer
         checkMsgLength(msgLength, maxMsgLength);
 
         // [1] happen-before guarantee for reads
-        long currentProducerPosition = producerPosition.get();
-        long firstConsumerPosition = consumerPositions.get(0);
-        long lastConsumerPosition = consumerPositions.get(lastConsumerIndex);
+        long currentProducerPosition = pointers.getLongVolatile(producerPointerIndex);
+        long firstConsumerPosition = pointers.getLongVolatile(consumerPointerIndexes[0]);
+        long lastConsumerPosition = pointers.getLongVolatile(consumerPointerIndexes[lastConsumerIndex]);
 
         int currentProducerOffset = offset(currentProducerPosition);
         boolean currentProducerFlip = flip(currentProducerPosition);
@@ -144,7 +159,7 @@ public class OneToManyRingBuffer
         boolean newProducerFlip = shouldFlip != currentProducerFlip;
         long newProducerPosition = position(nextProducerOffset, newProducerFlip);
         // [2]: happen-before guarantee for writes
-        producerPosition.set(newProducerPosition);
+        pointers.putLongVolatile(producerPointerIndex, newProducerPosition);
 
         return true;
     }
@@ -191,12 +206,14 @@ public class OneToManyRingBuffer
     public boolean readOne(int consumerIndex, final MessageHandler handler)
     {
         // [1] happen-before guarantee for reads
-        long barrierPosition = consumerIndex == 0 ? producerPosition.get() : consumerPositions.get(consumerIndex - 1);
+        long barrierPosition = consumerIndex == 0
+            ? pointers.getLongVolatile(producerPointerIndex)
+            : pointers.getLongVolatile(consumerPointerIndexes[consumerIndex - 1]);
 
         int previousBarrier = offset(barrierPosition);
         boolean previousFlip = flip(barrierPosition);
 
-        long currentConsumerPosition = consumerPositions.get(consumerIndex);
+        long currentConsumerPosition = pointers.getLongVolatile(consumerPointerIndexes[consumerIndex]);
         int currentConsumerOffset = offset(currentConsumerPosition);
         boolean currentConsumerFlip = flip(currentConsumerPosition);
 
@@ -254,7 +271,7 @@ public class OneToManyRingBuffer
             long newConsumerPosition = position(nextConsumerOffset, newFlip);
 
             // [2] happen-before guarantee for writes
-            consumerPositions.set(consumerIndex, newConsumerPosition);
+            pointers.putLongVolatile(consumerPointerIndexes[consumerIndex], newConsumerPosition);
             return readOne(consumerIndex, handler);
         }
 
@@ -284,7 +301,7 @@ public class OneToManyRingBuffer
         long newConsumerPosition = position(nextConsumerOffset, newFlip);
 
         // [3] happen-before guarantee for writes
-        consumerPositions.set(consumerIndex, newConsumerPosition);
+        pointers.putLongVolatile(consumerPointerIndexes[consumerIndex], newConsumerPosition);
 
         return true;
     }
