@@ -19,7 +19,7 @@ public class OneToManyRingBuffer
     /**
      * The pointers buffer contains the producer position and consumer positions.
      * <p>
-     * [(64 - 8) padding bytes] | producer position: 8 bytes |  [(64 - 8) padding bytes] | consumer position 1: 8 bytes | ... | [(64 - 8) padding bytes] | consumer position n: 8 bytes | 64 padding bytes
+     * [64 padding bytes] | producer position: 8 bytes |  [(64 - 8) padding bytes] | consumer position 1: 8 bytes | ... | [(64 - 8) padding bytes] | consumer position n: 8 bytes | 64 padding bytes
      */
     private final UnsafeBuffer pointers;
 
@@ -56,13 +56,13 @@ public class OneToManyRingBuffer
 
         capacity = 1 << powSize;
         unsafeBuffer = new UnsafeBuffer(capacity);
-        pointers = new UnsafeBuffer((Long.BYTES * 7) * (consumerSize + 1) + Long.BYTES * 8);
+        pointers = new UnsafeBuffer(Long.BYTES * 8 + Long.BYTES + (Long.BYTES * 7 + Long.BYTES) * consumerSize + Long.BYTES * 8);
         lastConsumerIndex = consumerSize - 1;
 
-        producerPointerIndex = Long.BYTES * 7;
+        producerPointerIndex = Long.BYTES * 8;
         consumerPointerIndexes = new int[consumerSize];
 
-        consumerPointerIndexes[0] = Long.BYTES * 7 + Long.BYTES + Long.BYTES * 7; // padding + producer-pointer-block + padding
+        consumerPointerIndexes[0] = Long.BYTES * 8 + Long.BYTES + Long.BYTES * 7; // padding + producer-pointer-block + padding
         for (int i = 1; i < consumerSize; i++)
         {
             consumerPointerIndexes[i] = consumerPointerIndexes[i - 1] + Long.BYTES + Long.BYTES * 7; // padding + consumer-pointer-block + padding

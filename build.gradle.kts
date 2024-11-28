@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "io.github.gc-garcol"
-version = "1.2.0"
+version = "1.2.1"
 
 java {
     withJavadocJar()
