@@ -14,13 +14,13 @@ import java.util.concurrent.TimeUnit;
 @State(Scope.Thread)
 @BenchmarkMode({ Mode.Throughput, Mode.AverageTime })
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
-@Measurement(iterations = 3, time = 3)
 @Fork(1)
 public class Pipeline1P3C_OneToManyRingBufferBechmark
 {
     @Benchmark
-    @Timeout(time = 20)
-    @Warmup(iterations = 3, time = 20)
+    @Timeout(time = 60)
+    @Measurement(iterations = 1, time = 60)
+    @Warmup(iterations = 1, time = 10)
     public void publish(Pipeline1P3C_OneToManyRingBufferPlan ringBufferPlan, Blackhole blackhole) throws IOException
     {
         ringBufferPlan.writeBuffer.clear();

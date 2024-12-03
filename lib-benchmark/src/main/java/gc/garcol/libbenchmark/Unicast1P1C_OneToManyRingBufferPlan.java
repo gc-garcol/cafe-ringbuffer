@@ -29,7 +29,7 @@ public class Unicast1P1C_OneToManyRingBufferPlan
     @Setup(Level.Trial)
     public void setUp(Blackhole blackhole) throws InterruptedException
     {
-        ringBuffer = new OneToManyRingBuffer(16, 1);
+        ringBuffer = new OneToManyRingBuffer(18, 1);
 
         messageHandler = new MessageHandler()
         {

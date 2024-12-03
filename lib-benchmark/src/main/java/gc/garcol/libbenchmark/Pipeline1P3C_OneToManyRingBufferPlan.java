@@ -29,7 +29,7 @@ public class Pipeline1P3C_OneToManyRingBufferPlan
     @Setup(Level.Trial)
     public void setUp(Blackhole blackhole) throws InterruptedException
     {
-        ringBuffer = new OneToManyRingBuffer(16, 3);
+        ringBuffer = new OneToManyRingBuffer(18, 3);
 
         messageHandler = new MessageHandler()
         {
