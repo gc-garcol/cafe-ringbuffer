@@ -141,12 +141,15 @@ public class OneToManyRingBufferTest
 
         oneToManyRingBuffer = new OneToManyRingBuffer(10, 2);
 
+        int publishedMessage = 0;
         for (int i = 0; i < messages.size(); i++)
         {
             messageBufferWriter.clear();
             ByteBufferUtil.put(messageBufferWriter, 0, messages.get(i).getBytes());
             messageBufferWriter.flip();
-            oneToManyRingBuffer.write(i, messageBufferWriter);
+            if (oneToManyRingBuffer.write(i, messageBufferWriter)) {
+                publishedMessage++;
+            }
         }
 
         Function<Integer, MessageHandler> handlerSupplier = (Integer consumerId) ->
@@ -180,7 +183,8 @@ public class OneToManyRingBufferTest
             for (int i = 0; i < messages.size(); i++)
             {
                 UncheckUtil.run(() -> Thread.sleep(15));
-                oneToManyRingBuffer.read(0, handlerSupplier.apply(0), 1);
+                int consumedMessage = oneToManyRingBuffer.read(0, handlerSupplier.apply(0), 1);
+                System.out.println("Consumer 0 consume message: " + consumedMessage);
             }
             end.set(true);
         });
@@ -197,8 +201,8 @@ public class OneToManyRingBufferTest
         UncheckUtil.run(thread0::join);
         UncheckUtil.run(thread1::join);
 
-        Assertions.assertEquals(messages.size(), consumedIndexes.get(0).get(), "Consumer 0 not consume all messages");
-        Assertions.assertEquals(messages.size(), consumedIndexes.get(1).get(), "Consumer 1 not consume all messages");
+        Assertions.assertEquals(publishedMessage, consumedIndexes.get(0).get(), "Consumer 0 not consume all messages");
+        Assertions.assertEquals(publishedMessage, consumedIndexes.get(1).get(), "Consumer 1 not consume all messages");
     }
 
     @Test

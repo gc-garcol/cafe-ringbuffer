@@ -24,8 +24,9 @@ public class OneToManyRingBuffer
     private final UnsafeBuffer pointers;
 
     private final int capacity;
-    private final int maxMsgLength;
+    private final int maxRecordLength;
     private final int lastConsumerIndex;
+    private final int consumerSize;
 
     private final int producerPointerIndex;
     private final int[] consumerPointerIndexes;
@@ -35,6 +36,8 @@ public class OneToManyRingBuffer
      * The header contains the length and type of the message.
      */
     public static final int HEADER_LENGTH = Integer.BYTES * 2; // length, type
+
+    public static final int EXTRA_PADDING_LENGTH = Long.BYTES * 8;
 
     /**
      * Alignment as a multiple of bytes for each record.
@@ -61,6 +64,7 @@ public class OneToManyRingBuffer
 
         producerPointerIndex = Long.BYTES * 8;
         consumerPointerIndexes = new int[consumerSize];
+        this.consumerSize = consumerSize;
 
         consumerPointerIndexes[0] = Long.BYTES * 8 + Long.BYTES + Long.BYTES * 7; // padding + producer-pointer-block + padding
         for (int i = 1; i < consumerSize; i++)
@@ -68,7 +72,7 @@ public class OneToManyRingBuffer
             consumerPointerIndexes[i] = consumerPointerIndexes[i - 1] + Long.BYTES + Long.BYTES * 7; // padding + consumer-pointer-block + padding
         }
 
-        maxMsgLength = capacity >> 3;
+        maxRecordLength = capacity >> 3;
     }
 
     /**
@@ -80,13 +84,15 @@ public class OneToManyRingBuffer
      */
     public boolean write(int msgTypeId, ByteBuffer message)
     {
-        int msgLength = message.limit();
-        checkMsgLength(msgLength, maxMsgLength);
+        int messageLength = message.limit();
+        final int recordLength = calculateRecordLength(messageLength);
+        final int alignedRecordLength = BitUtil.align(recordLength, ALIGNMENT);
+        checkMsgLength(alignedRecordLength, maxRecordLength);
 
         // [1] happen-before guarantee for reads
         long currentProducerPosition = pointers.getLongVolatile(producerPointerIndex);
         long firstConsumerPosition = pointers.getLongVolatile(consumerPointerIndexes[0]);
-        long lastConsumerPosition = pointers.getLongVolatile(consumerPointerIndexes[lastConsumerIndex]);
+        long lastConsumerPosition = consumerSize == 1 ? firstConsumerPosition : pointers.getLongVolatile(consumerPointerIndexes[lastConsumerIndex]);
 
         int currentProducerOffset = offset(currentProducerPosition);
         boolean currentProducerFlip = flip(currentProducerPosition);
@@ -94,9 +100,6 @@ public class OneToManyRingBuffer
         boolean firstConsumerFlip = flip(firstConsumerPosition);
         int lastConsumerOffset = offset(lastConsumerPosition);
         boolean lastConsumerFlip = flip(lastConsumerPosition);
-
-        final int recordLength = msgLength + HEADER_LENGTH;
-        final int alignedRecordLength = BitUtil.align(recordLength, ALIGNMENT);
 
         final int expectedEndOffsetOfRecord = currentProducerOffset + alignedRecordLength - 1;
 
@@ -151,8 +154,8 @@ public class OneToManyRingBuffer
         int nextProducerOffset = (realStartOfRecord + alignedRecordLength) % capacity; // maybe nextProducerOffset == 0
 
         // when [2] happened, the [2] ensures that the these instructions are synchronized into main memory as well
-        buffer.putBytes(realStartOfRecord + HEADER_LENGTH, message, 0, msgLength);
-        buffer.putInt(realStartOfRecord, msgLength);
+        buffer.putBytes(realStartOfRecord + HEADER_LENGTH, message, 0, messageLength);
+        buffer.putInt(realStartOfRecord, messageLength);
         buffer.putInt(realStartOfRecord + Integer.BYTES, msgTypeId);
 
         shouldFlip |= nextProducerOffset == 0;
@@ -284,7 +287,7 @@ public class OneToManyRingBuffer
             return false;
         }
 
-        int recordLength = messageLength + HEADER_LENGTH;
+        int recordLength = calculateRecordLength(messageLength);
         int alignedRecordLength = BitUtil.align(recordLength, ALIGNMENT);
         int endRecordOffset = currentConsumerOffset + alignedRecordLength - 1;
 
@@ -304,5 +307,10 @@ public class OneToManyRingBuffer
         pointers.putLongVolatile(consumerPointerIndexes[consumerIndex], newConsumerPosition);
 
         return true;
+    }
+
+    private int calculateRecordLength(int messageLength)
+    {
+        return messageLength + HEADER_LENGTH + EXTRA_PADDING_LENGTH;
     }
 }
