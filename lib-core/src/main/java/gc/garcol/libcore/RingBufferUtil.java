@@ -25,8 +25,10 @@ public class RingBufferUtil
      */
     public static void checkMsgLength(int length, int maxMsgLength)
     {
-        Preconditions.checkArgument(length >= 0, "invalid message length=" + length);
-        Preconditions.checkArgument(length <= maxMsgLength, "encoded message exceeds maxMsgLength=" + maxMsgLength + ", length=" + length);
+        if (length > maxMsgLength)
+        {
+            throw new IllegalArgumentException("encoded message exceeds maxMsgLength=" + maxMsgLength + ", length=" + length);
+        }
     }
 
     /**

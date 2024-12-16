@@ -91,8 +91,10 @@ public class OneToManyRingBuffer
 
         // [1] happen-before guarantee for reads
         long currentProducerPosition = pointers.getLongVolatile(producerPointerIndex);
-        long firstConsumerPosition = pointers.getLongVolatile(consumerPointerIndexes[0]);
-        long lastConsumerPosition = consumerSize == 1 ? firstConsumerPosition : pointers.getLongVolatile(consumerPointerIndexes[lastConsumerIndex]);
+
+        // when [1] happened, the [1] ensures that the these instructions are loaded from the main memory as well
+        long firstConsumerPosition = pointers.getLong(consumerPointerIndexes[0]);
+        long lastConsumerPosition = consumerSize == 1 ? firstConsumerPosition : pointers.getLong(consumerPointerIndexes[lastConsumerIndex]);
 
         int currentProducerOffset = offset(currentProducerPosition);
         boolean currentProducerFlip = flip(currentProducerPosition);
@@ -216,7 +218,7 @@ public class OneToManyRingBuffer
         int previousBarrier = offset(barrierPosition);
         boolean previousFlip = flip(barrierPosition);
 
-        long currentConsumerPosition = pointers.getLongVolatile(consumerPointerIndexes[consumerIndex]);
+        long currentConsumerPosition = pointers.getLong(consumerPointerIndexes[consumerIndex]);
         int currentConsumerOffset = offset(currentConsumerPosition);
         boolean currentConsumerFlip = flip(currentConsumerPosition);
 
